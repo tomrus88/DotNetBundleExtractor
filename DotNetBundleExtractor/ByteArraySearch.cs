@@ -2,12 +2,10 @@
 
 static class ByteArrayRocks
 {
-    static readonly int[] Empty = new int[0];
-
     public static int[] Locate(this byte[] self, byte[] candidate)
     {
         if (IsEmptyLocate(self, candidate))
-            return Empty;
+            return Array.Empty<int>();
 
         var list = new List<int>();
 
@@ -19,7 +17,7 @@ static class ByteArrayRocks
             list.Add(i);
         }
 
-        return list.Count == 0 ? Empty : list.ToArray();
+        return list.Count == 0 ? Array.Empty<int>() : list.ToArray();
     }
 
     static bool IsMatch(byte[] array, int position, byte[] candidate)

@@ -64,7 +64,7 @@ class Program
             {
                 byte[] fileBytesCompressed = reader.ReadBytes((int)file.CompressedSize);
                 using MemoryStream memoryStreamCompressed = new(fileBytesCompressed);
-                using DeflateStream deflate = new(memoryStreamCompressed, CompressionMode.Decompress, true);
+                using DeflateStream deflate = new(memoryStreamCompressed, CompressionMode.Decompress);
                 using MemoryStream memoryStreamDecompressed = new((int)file.Size);
                 deflate.CopyTo(memoryStreamDecompressed);
                 fileBytes = memoryStreamDecompressed.ToArray();
