@@ -12,6 +12,8 @@ class Program
         0xee, 0x3b, 0x2d, 0xce, 0x24, 0xb3, 0x6a, 0xae
     };
 
+    const string destFolder = "extracted";
+
     static void Main(string[] args)
     {
         if (args.Length == 0)
@@ -73,7 +75,13 @@ class Program
             {
                 fileBytes = reader.ReadBytes((int)file.Size);
             }
-            File.WriteAllBytes(file.RelativePath, fileBytes);
+
+            string filePath = Path.Combine(destFolder, file.RelativePath);
+            if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            }
+            File.WriteAllBytes(filePath, fileBytes);
 
             Console.WriteLine($"Extracted file {file.RelativePath}");
         }
