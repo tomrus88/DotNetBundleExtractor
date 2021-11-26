@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.IO.Compression;
 
 namespace DotNetBundleExtractor;
 
@@ -42,29 +42,37 @@ class Program
 
         int bundleHeaderPosOffset = bundleSigOffset - 8;
 
-        long bundleHeaderOffset = Unsafe.As<byte, long>(ref bundleBytes[bundleHeaderPosOffset]);
+        long bundleHeaderOffset = BitConverter.ToInt64(bundleBytes, bundleHeaderPosOffset);
 
         Console.WriteLine($"Bundle header at 0x{bundleHeaderOffset:X8}");
 
-        byte[] bundleHeaderBytes = bundleBytes[(int)bundleHeaderOffset..];
+        using MemoryStream memoryStream = new(bundleBytes);
+        memoryStream.Position = bundleHeaderOffset;
+        using BinaryReader reader = new(memoryStream);
 
         Manifest manifest = new Manifest();
-        using MemoryStream memoryStream = new MemoryStream(bundleHeaderBytes);
-        using BinaryReader reader = new BinaryReader(memoryStream);
         manifest.Read(reader);
 
         foreach (var file in manifest.Files)
         {
             Console.WriteLine(file);
 
-            // TODO: support compressed files as well
+            memoryStream.Position = file.Offset;
+
+            byte[] fileBytes;
             if (file.CompressedSize > 0)
             {
-                Console.WriteLine($"Skipped compressed file {file.RelativePath}");
-                continue;
+                byte[] fileBytesCompressed = reader.ReadBytes((int)file.CompressedSize);
+                using MemoryStream memoryStreamCompressed = new(fileBytesCompressed);
+                using DeflateStream deflate = new(memoryStreamCompressed, CompressionMode.Decompress, true);
+                using MemoryStream memoryStreamDecompressed = new((int)file.Size);
+                deflate.CopyTo(memoryStreamDecompressed);
+                fileBytes = memoryStreamDecompressed.ToArray();
             }
-
-            byte[] fileBytes = bundleBytes[(int)file.Offset..(int)(file.Offset + file.Size)];
+            else
+            {
+                fileBytes = reader.ReadBytes((int)file.Size);
+            }
             File.WriteAllBytes(file.RelativePath, fileBytes);
 
             Console.WriteLine($"Extracted file {file.RelativePath}");
