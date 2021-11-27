@@ -1,5 +1,5 @@
-﻿using CommandLine;
-using CommandLine.Text;
+﻿using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO.Compression;
 
 namespace DotNetBundleExtractor;
@@ -14,25 +14,9 @@ class Program
         0xee, 0x3b, 0x2d, 0xce, 0x24, 0xb3, 0x6a, 0xae
     };
 
-    public class Options
+    static void ExtractBundle(string inputFile, string outputFolder)
     {
-        [Value(0, Required = true, HelpText = "Input file.", MetaName = "InputFile")]
-        public string InputFile { get; set; }
-
-        [Option('o', "out", Required = false, HelpText = "Output folder.", Default = "extracted")]
-        public string OutputPath { get; set; }
-
-        [Usage(ApplicationAlias = "DotNetBundleExtractor")]
-        public static IEnumerable<Example> Examples => new List<Example>
-        {
-            new Example("Extract dotnet bundle to default folder", new Options { InputFile = "file.exe" }),
-            new Example("Extract dotnet bundle to specific folder", new Options { InputFile = "file.exe", OutputPath = "folder" })
-        };
-    }
-
-    static void ExtractBundle(Options options)
-    {
-        byte[] bundleBytes = File.ReadAllBytes(options.InputFile);
+        byte[] bundleBytes = File.ReadAllBytes(inputFile);
 
         int[] bundleSigOffsets = bundleBytes.Locate(bundleSignature);
 
@@ -86,7 +70,7 @@ class Program
                 fileBytes = reader.ReadBytes((int)file.Size);
             }
 
-            string filePath = Path.Combine(options.OutputPath, file.RelativePath);
+            string filePath = Path.Combine(outputFolder, file.RelativePath);
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
@@ -99,7 +83,16 @@ class Program
 
     static void Main(string[] args)
     {
-        Parser.Default.ParseArguments<Options>(args)
-            .WithParsed(ExtractBundle);
+        var outputFolderOption = new Option<DirectoryInfo>(new[] { "-o", "--out", "--outFolder" }, () => new DirectoryInfo("extracted"), "Path to extraction folder");
+        var inputFileArgument = new Argument<FileInfo>("inputFile", "Path to bundle file") { Arity = ArgumentArity.ExactlyOne };
+        var rootCommand = new RootCommand { outputFolderOption, inputFileArgument };
+
+        rootCommand.Description = "Extracts content from .NET single file bundle files";
+        rootCommand.Handler = CommandHandler.Create(outputFolderOption, inputFileArgument, (outFolder, inputFile) =>
+        {
+            ExtractBundle(inputFile.FullName, outFolder.FullName);
+            return Task.CompletedTask;
+        });
+        rootCommand.Invoke(args);
     }
 }

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21576.2" />
   </ItemGroup>
 
 </Project>
