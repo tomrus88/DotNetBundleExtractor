@@ -25,7 +25,7 @@ jobs:
     - name: Publish
       run: |
         dotnet publish -p:PublishSingleFile=true -r win-x64 -c Release --self-contained true -p:EnableCompressionInSingleFile=true
-        zip DotNetBundleExtractor DotNetBundleExtractor/bin/Release/net6.0/win-x64/publish/DotNetBundleExtractor.exe
+        zip -j DotNetBundleExtractor DotNetBundleExtractor/bin/Release/net6.0/win-x64/publish/DotNetBundleExtractor.exe
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
