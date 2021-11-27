@@ -1,4 +1,6 @@
-﻿using System.IO.Compression;
+﻿using CommandLine;
+using CommandLine.Text;
+using System.IO.Compression;
 
 namespace DotNetBundleExtractor;
 
@@ -12,29 +14,37 @@ class Program
         0xee, 0x3b, 0x2d, 0xce, 0x24, 0xb3, 0x6a, 0xae
     };
 
-    const string destFolder = "extracted";
-
-    static void Main(string[] args)
+    public class Options
     {
-        if (args.Length == 0)
-        {
-            Console.WriteLine("Usage: DotNetBundleExtractor <path_to_dotnet_bundle>");
-            return;
-        }
+        [Value(0, Required = true, HelpText = "Input file.", MetaName = "InputFile")]
+        public string InputFile { get; set; }
 
-        byte[] bundleBytes = File.ReadAllBytes(args[0]);
+        [Option('o', "out", Required = false, HelpText = "Output folder.", Default = "extracted")]
+        public string OutputPath { get; set; }
+
+        [Usage(ApplicationAlias = "DotNetBundleExtractor")]
+        public static IEnumerable<Example> Examples => new List<Example>
+        {
+            new Example("Extract dotnet bundle to default folder", new Options { InputFile = "file.exe" }),
+            new Example("Extract dotnet bundle to specific folder", new Options { InputFile = "file.exe", OutputPath = "folder" })
+        };
+    }
+
+    static void ExtractBundle(Options options)
+    {
+        byte[] bundleBytes = File.ReadAllBytes(options.InputFile);
 
         int[] bundleSigOffsets = bundleBytes.Locate(bundleSignature);
 
         if (bundleSigOffsets.Length == 0)
         {
-            Console.WriteLine("Not a bundle?");
+            Console.WriteLine("Error: not a bundle?");
             return;
         }
 
         if (bundleSigOffsets.Length > 1)
         {
-            Console.WriteLine("More than one signature?");
+            Console.WriteLine("Error: more than one signature?");
             return;
         }
 
@@ -76,7 +86,7 @@ class Program
                 fileBytes = reader.ReadBytes((int)file.Size);
             }
 
-            string filePath = Path.Combine(destFolder, file.RelativePath);
+            string filePath = Path.Combine(options.OutputPath, file.RelativePath);
             if (!Directory.Exists(Path.GetDirectoryName(filePath)))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
@@ -85,7 +95,11 @@ class Program
 
             Console.WriteLine($"Extracted file {file.RelativePath}");
         }
+    }
 
-        Console.ReadKey();
+    static void Main(string[] args)
+    {
+        Parser.Default.ParseArguments<Options>(args)
+            .WithParsed(ExtractBundle);
     }
 }
