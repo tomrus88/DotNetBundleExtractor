@@ -23,9 +23,11 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish
-      run: dotnet publish -p:PublishSingleFile=true -r win-x64 -c Release --self-contained true -p:EnableCompressionInSingleFile=true
+      run: |
+        dotnet publish -p:PublishSingleFile=true -r win-x64 -c Release --self-contained true -p:EnableCompressionInSingleFile=true
+        zip DotNetBundleExtractor DotNetBundleExtractor/bin/Release/net6.0/win-x64/publish/DotNetBundleExtractor.exe
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          DotNetBundleExtractor/bin/Release/net6.0/win-x64/publish/DotNetBundleExtractor.exe
+          DotNetBundleExtractor.zip
