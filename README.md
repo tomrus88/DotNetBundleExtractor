@@ -1,2 +1,2 @@
 # DotNetBundleExtractor
-Command line tool to extract files from .NET Core and .NET single file bundles.
+Command line tool for extracting embedded files from .NET Core and .NET single file bundles.
