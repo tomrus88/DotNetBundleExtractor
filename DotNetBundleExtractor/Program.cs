@@ -1,5 +1,4 @@
 ﻿using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO.Compression;
 
 namespace DotNetBundleExtractor;
@@ -71,9 +70,10 @@ class Program
             }
 
             string filePath = Path.Combine(outputFolder, file.RelativePath);
-            if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+            string dir = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(dir))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                Directory.CreateDirectory(dir);
             }
             File.WriteAllBytes(filePath, fileBytes);
 
@@ -88,11 +88,10 @@ class Program
         var rootCommand = new RootCommand { outputFolderOption, inputFileArgument };
 
         rootCommand.Description = "Extracts content from .NET single file bundle files";
-        rootCommand.Handler = CommandHandler.Create(outputFolderOption, inputFileArgument, (outFolder, inputFile) =>
+        rootCommand.SetHandler((DirectoryInfo outFolder, FileInfo inputFile) =>
         {
             ExtractBundle(inputFile.FullName, outFolder.FullName);
-            return Task.CompletedTask;
-        });
+        }, outputFolderOption, inputFileArgument);
         rootCommand.Invoke(args);
     }
 }
