@@ -81,13 +81,13 @@ class Program
         }
     }
 
+    const string AppDescription = "Extracts content from .NET single file bundle files";
+
     static void Main(string[] args)
     {
         var outputFolderOption = new Option<DirectoryInfo>(new[] { "-o", "--out", "--outFolder" }, () => new DirectoryInfo("extracted"), "Path to extraction folder");
         var inputFileArgument = new Argument<FileInfo>("inputFile", "Path to bundle file") { Arity = ArgumentArity.ExactlyOne };
-        var rootCommand = new RootCommand { outputFolderOption, inputFileArgument };
-
-        rootCommand.Description = "Extracts content from .NET single file bundle files";
+        var rootCommand = new RootCommand(AppDescription) { outputFolderOption, inputFileArgument };
         rootCommand.SetHandler((DirectoryInfo outFolder, FileInfo inputFile) =>
         {
             ExtractBundle(inputFile.FullName, outFolder.FullName);
